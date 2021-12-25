@@ -1,0 +1,13 @@
+# depslib dependency file v1.0
+1586277493 source:d:\svn\si_i18n\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"boyer_moore.h"
+
+1586278098 source:d:\svn\si_i18n\boyer_moore.c
+	<stdio.h>
+	<string.h>
+
+1586266165 d:\svn\si_i18n\boyer_moore.h
+
