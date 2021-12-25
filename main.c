@@ -150,6 +150,60 @@ int IsStringFit(unsigned char *pBuf, StringPair *pSt, int *iMaxChar)
     }
 }
 
+//处理转义字符
+static int _StringTranslate(unsigned char *pString, int iLen)
+{
+    int iResLen = iLen;
+
+    for (int i = 0; i < iResLen-1; i++)
+    {
+        if (pString[i] == '\\')
+        {
+            unsigned char ucTmp = 0;
+
+            switch (pString[i+1])
+            {
+                case '\\':
+                {
+                    ucTmp = pString[i+1];
+                    break;
+                }
+                case 'r':
+                {
+                    ucTmp = '\r';
+                    break;
+                }
+                case 'n':
+                {
+                    ucTmp = '\n';
+                    break;
+                }
+                default:
+                {
+                }
+            }
+
+            if (ucTmp)
+            {
+                pString[i] = ucTmp;
+                memmove(pString + i + 1, pString + i +2, iResLen - i - 2);
+                iResLen--;
+            }
+        }
+    }
+
+    memset(pString + iResLen, 0, iLen - iResLen);
+
+    return iResLen;
+}
+int StringTranslate(StringPair *pPair)
+{
+    pPair->iEnLen = _StringTranslate(pPair->ucEn, pPair->iEnLen);
+    pPair->iNewLen = _StringTranslate(pPair->ucNew, pPair->iNewLen);
+
+    return 0;
+}
+
 int main(int iCnt, char *pParam[])
 {
     FILE *pfLngFile;
@@ -161,13 +215,13 @@ int main(int iCnt, char *pParam[])
     unsigned char *pTmpIn;
     unsigned char *pTmpOut;
 
-    unsigned char *pExeTmpIn;
+    //unsigned char *pExeTmpIn;
     unsigned char *pExeTmpOut;
 
     char czNewFileName[128];
     char czOldFileName[128];
 
-    printf("sourceinsight4 i18n tool V1.00\ntuwulin365@126.com  2020-04-07\n");
+    printf("sourceinsight4 i18n tool V1.01\ntuwulin365@126.com  2021-12-25\n");
     printf("usage: i18n_tool.exe si.exe chs.lng\n\n");
 
     if (iCnt != 3)
@@ -217,6 +271,8 @@ int main(int iCnt, char *pParam[])
         pTmpOut = GetStringPair(pTmpIn, i, &stString);
         if (pTmpOut)
         {
+            StringTranslate(&stString);
+
             i = i - (pTmpOut-pTmpIn);
             pTmpIn = pTmpOut;
             //printf("%s %d\n", stString.ucEn, stString.iEnLen);
@@ -235,14 +291,14 @@ int main(int iCnt, char *pParam[])
                 }
                 else
                 {
-                    printf("string not fit : %d : %s\n", stString.iCurrentLine-2, stString.ucEn);
+                    printf("string not fit : line %d : %s\n", stString.iCurrentLine-2, stString.ucEn);
                     printf("old max char : %d\n", iMaxChar);
                     printf("new char : %d\n\n", stString.iNewLen);
                 }
             }
             else
             {
-                printf("string not find : %d : %s\n\n", stString.iCurrentLine-2, stString.ucEn);
+                printf("string not find : line %d : %s\n\n", stString.iCurrentLine-2, stString.ucEn);
             }
         }
     }

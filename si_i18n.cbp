@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters='&quot;sourceinsight4.exe&quot; chs_string0.lng' />
+				<Option parameters="sourceinsight4en_org.exe chs.lng" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -39,10 +39,6 @@
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Extensions>
-			<code_completion />
-			<envvars />
-			<debugger />
-		</Extensions>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>
