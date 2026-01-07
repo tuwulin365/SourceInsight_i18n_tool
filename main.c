@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
 #include "boyer_moore.h"
 
 typedef struct
@@ -11,6 +12,8 @@ typedef struct
     unsigned char ucNew[4096];
     int iNewLen;
 }StringPair;
+
+unsigned int uIsUnicode = 0;
 
 unsigned char* GetStringLine(unsigned char *pBuf, int iInLen, unsigned char *pOut, int *iOutLen, int *iCurrentLine)
 {
@@ -106,14 +109,29 @@ unsigned char* FindString(unsigned char *pBuf, int iInLen, unsigned char *pStr, 
             break;
         }
 
-        if ((pTmp[-1] == 0) && (pTmp[iStrLen] == 0))
+        if (uIsUnicode)
         {
-            break;
+            if ((pTmp[iStrLen] == 0) && (pTmp[iStrLen+1] == 0))
+            {
+                break;
+            }
+            else
+            {
+                pStart = pTmp + iStrLen;
+                iStart = iInLen - ((unsigned int)pStart - (unsigned int)pBuf);
+            }
         }
         else
         {
-            pStart = pTmp + iStrLen;
-            iStart = iInLen - ((unsigned int)pStart - (unsigned int)pBuf);
+            if ((pTmp[-1] == 0) && (pTmp[iStrLen] == 0))
+            {
+                break;
+            }
+            else
+            {
+                pStart = pTmp + iStrLen;
+                iStart = iInLen - ((unsigned int)pStart - (unsigned int)pBuf);
+            }
         }
     }
 
@@ -134,18 +152,37 @@ int IsStringFit(unsigned char *pBuf, StringPair *pSt, int *iMaxChar)
     *iMaxChar = i;
     while (1)
     {
-        if ((pBuf[i] == 0) && (pBuf[i+1] == 0))
+        if (uIsUnicode)
         {
-            i++;
-            *iMaxChar = i;
-            if (i >= pSt->iNewLen)
+            if ((pBuf[i] == 0) && (pBuf[i+1] == 0) && (pBuf[i+2] == 0) && (pBuf[i+3] == 0))
             {
-                return 1;
+                i++;
+                *iMaxChar = i;
+                if (i >= pSt->iNewLen)
+                {
+                    return 1;
+                }
+            }
+            else
+            {
+                return 0;
             }
         }
         else
         {
-            return 0;
+            if ((pBuf[i] == 0) && (pBuf[i+1] == 0))
+            {
+                i++;
+                *iMaxChar = i;
+                if (i >= pSt->iNewLen)
+                {
+                    return 1;
+                }
+            }
+            else
+            {
+                return 0;
+            }
         }
     }
 }
@@ -176,6 +213,11 @@ static int _StringTranslate(unsigned char *pString, int iLen)
                 case 'n':
                 {
                     ucTmp = '\n';
+                    break;
+                }
+                case 't':
+                {
+                    ucTmp = '\t';
                     break;
                 }
                 default:
@@ -221,10 +263,21 @@ int main(int iCnt, char *pParam[])
     char czNewFileName[128];
     char czOldFileName[128];
 
-    printf("sourceinsight4 i18n tool V1.01\ntuwulin365@126.com  2021-12-25\n");
-    printf("usage: i18n_tool.exe si.exe chs.lng\n\n");
+    printf("sourceinsight4 i18n tool V1.02\ntuwulin365@126.com  2026-01-06\n");
+    printf("usage: i18n_tool.exe si.exe chs.lng\n");
+    printf("usage: i18n_tool.exe si.exe chs.lng unicode\n\n");
 
-    if (iCnt != 3)
+    if (3 == iCnt)
+    {
+    }
+    else if (4 == iCnt)
+    {
+        if (0 == strcmp(pParam[3], "unicode"))
+        {
+            uIsUnicode = 1;
+        }
+    }
+    else
     {
         printf("param err.\n");
         return -1;
@@ -272,6 +325,17 @@ int main(int iCnt, char *pParam[])
         if (pTmpOut)
         {
             StringTranslate(&stString);
+            if (uIsUnicode)
+            {
+                WCHAR wcBuf[256] = {0};
+                stString.iEnLen = MultiByteToWideChar(CP_UTF8, 0, (const char*)stString.ucEn, stString.iEnLen, wcBuf, sizeof(wcBuf)-2);
+                stString.iEnLen *= 2;
+                memcpy(stString.ucEn, wcBuf, stString.iEnLen);
+
+                stString.iNewLen = MultiByteToWideChar(CP_UTF8, 0, (const char*)stString.ucNew, stString.iNewLen, wcBuf, sizeof(wcBuf)-2);
+                stString.iNewLen *= 2;
+                memcpy(stString.ucNew, wcBuf, stString.iNewLen);
+            }
 
             i = i - (pTmpOut-pTmpIn);
             pTmpIn = pTmpOut;
